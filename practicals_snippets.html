@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PyPracticals — Lab Code Library</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e2d45;
+    --accent: #38bdf8;
+    --accent2: #818cf8;
+    --green: #4ade80;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --orange: #fb923c;
+    --pink: #f472b6;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Syne', sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-display);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(56,189,248,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(56,189,248,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(10,14,26,0.9);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+  }
+  .logo { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.03em; display: flex; align-items: center; gap: 0.5rem; }
+  .logo span:first-child { color: var(--accent); }
+  .logo-dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.85)} }
+  .header-meta { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); }
+
+  main { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 3rem 2rem 5rem; }
+
+  .hero { text-align: center; margin-bottom: 3rem; animation: fadeUp 0.6s ease both; }
+  .hero h1 { font-size: clamp(2rem, 5vw, 3.2rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 0.75rem; }
+  .hero h1 em { font-style: normal; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero p { color: var(--muted); font-size: 0.95rem; font-family: var(--font-mono); }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+  /* Search */
+  .search-wrap { margin-bottom: 2rem; animation: fadeUp 0.6s 0.1s ease both; }
+  .search-box { display: flex; align-items: center; gap: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 0.75rem 1.25rem; transition: border-color 0.2s; }
+  .search-box:focus-within { border-color: var(--accent); }
+  .search-box svg { color: var(--muted); flex-shrink: 0; }
+  .search-box input { background: none; border: none; outline: none; color: var(--text); font-family: var(--font-mono); font-size: 0.9rem; width: 100%; }
+  .search-box input::placeholder { color: var(--muted); }
+
+  /* Filter tabs */
+  .filters { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; animation: fadeUp 0.6s 0.15s ease both; }
+  .filter-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); font-family: var(--font-mono); font-size: 0.78rem; padding: 0.4rem 1rem; border-radius: 100px; cursor: pointer; transition: all 0.2s; }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active { background: var(--accent); border-color: var(--accent); color: #0a0e1a; font-weight: 700; }
+
+  .count-badge { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); margin-bottom: 1.25rem; animation: fadeUp 0.6s 0.2s ease both; }
+  .count-badge span { color: var(--accent); font-weight: 700; }
+
+  /* Cards */
+  .cards-list { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    animation: fadeUp 0.5s ease both;
+  }
+  .card:hover { border-color: var(--accent); box-shadow: 0 8px 40px rgba(56,189,248,0.08); }
+
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 1.25rem; gap: 1rem; cursor: pointer;
+    user-select: none;
+  }
+  .card-header:hover .chevron { color: var(--accent); }
+
+  .card-meta { display: flex; align-items: center; gap: 0.75rem; min-width: 0; flex: 1; }
+
+  .prac-num {
+    font-family: var(--font-mono); font-size: 0.7rem; font-weight: 700;
+    padding: 0.25rem 0.65rem; border-radius: 6px; flex-shrink: 0;
+    background: rgba(56,189,248,0.12); color: var(--accent);
+    border: 1px solid rgba(56,189,248,0.2);
+  }
+
+  .tag { font-family: var(--font-mono); font-size: 0.68rem; font-weight: 600; padding: 0.2rem 0.55rem; border-radius: 5px; flex-shrink: 0; }
+  .tag-ml      { background: rgba(129,140,248,0.15); color: var(--accent2); }
+  .tag-stats   { background: rgba(74,222,128,0.15); color: var(--green); }
+  .tag-nlp     { background: rgba(251,191,36,0.15); color: var(--yellow); }
+  .tag-math    { background: rgba(248,113,113,0.15); color: var(--red); }
+  .tag-nn      { background: rgba(251,146,60,0.15); color: var(--orange); }
+  .tag-cluster { background: rgba(244,114,182,0.15); color: var(--pink); }
+  .tag-prob    { background: rgba(56,189,248,0.15); color: var(--accent); }
+
+  .card-title { font-size: 0.95rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .card-actions { display: flex; align-items: center; gap: 0.5rem; flex-shrink: 0; }
+
+  .copy-btn {
+    display: flex; align-items: center; gap: 0.4rem;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted); font-family: var(--font-mono); font-size: 0.75rem;
+    padding: 0.35rem 0.85rem; border-radius: 8px; cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(56,189,248,0.08); }
+  .copy-btn.copied { border-color: var(--green); color: var(--green); background: rgba(74,222,128,0.08); }
+
+  .chevron { color: var(--muted); transition: transform 0.3s, color 0.2s; flex-shrink: 0; }
+  .chevron.open { transform: rotate(180deg); }
+
+  /* Collapsible body */
+  .card-body { display: none; border-top: 1px solid var(--border); }
+  .card-body.open { display: block; }
+
+  .card-desc { padding: 0.65rem 1.25rem; font-size: 0.78rem; color: var(--muted); font-family: var(--font-mono); border-bottom: 1px solid var(--border); background: rgba(0,0,0,0.2); }
+
+  .code-wrap { padding: 1.1rem 1.25rem; overflow-x: auto; background: #080c18; }
+  pre { font-family: var(--font-mono); font-size: 0.8rem; line-height: 1.75; color: #c9d1d9; white-space: pre; }
+
+  /* Syntax */
+  .kw  { color: #ff7b72; }
+  .fn  { color: #d2a8ff; }
+  .st  { color: #a5d6ff; }
+  .cm  { color: #8b949e; font-style: italic; }
+  .nm  { color: #79c0ff; }
+  .op  { color: #ffa657; }
+  .cl  { color: #ffa657; }
+  .pm  { color: #e6edf3; }
+  .dec { color: #4ade80; }
+
+  /* Empty */
+  .empty { text-align: center; padding: 4rem 2rem; color: var(--muted); font-family: var(--font-mono); font-size: 0.9rem; }
+
+  /* Toast */
+  .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--green); color: #0a0e1a; font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; padding: 0.65rem 1.5rem; border-radius: 100px; z-index: 9999; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); pointer-events: none; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span>Py</span><span>Practicals</span>
+    <div class="logo-dot"></div>
+  </div>
+  <div class="header-meta">// lab code library</div>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>Lab <em>Practicals</em><br>Code Library</h1>
+    <p>&#x2192; click a card to expand &nbsp;·&nbsp; hit copy &nbsp;·&nbsp; paste &amp; run.</p>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" placeholder="Search practicals..." oninput="filterCards()">
+    </div>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" onclick="setFilter('ml',this)">ML / PCA</button>
+    <button class="filter-btn" onclick="setFilter('stats',this)">Statistics</button>
+    <button class="filter-btn" onclick="setFilter('nlp',this)">NLP / Similarity</button>
+    <button class="filter-btn" onclick="setFilter('math',this)">Math / Optimization</button>
+    <button class="filter-btn" onclick="setFilter('nn',this)">Neural Networks</button>
+    <button class="filter-btn" onclick="setFilter('cluster',this)">Clustering</button>
+    <button class="filter-btn" onclick="setFilter('prob',this)">Probability</button>
+  </div>
+
+  <div class="count-badge" id="countBadge"></div>
+  <div class="cards-list" id="cardsList"></div>
+</main>
+
+<div class="toast" id="toast">✓ Copied to clipboard!</div>
+
+<script>
+const practicals = [
+  {
+    id: 1,
+    num: "Practical 1",
+    category: "ml",
+    tag: "ml",
+    tagLabel: "ML / PCA",
+    title: "Principal Component Analysis (PCA) — Iris Dataset",
+    aim: "To perform and analyze dimensionality reduction on real-world datasets using Principal Component Analysis (PCA) by applying matrix representation, covariance matrix, eigenvalues, and eigenvectors.",
+    desc: "Implements PCA from scratch using NumPy: standardize → covariance matrix → eigendecomposition → project to 2D → visualize.",
+    code: `<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">from</span> sklearn.datasets <span class="kw">import</span> load_iris
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+
+<span class="cm"># STEP 1: Load Dataset</span>
+iris = <span class="fn">load_iris</span>()
+X = iris.data
+y = iris.target
+feature_names = iris.feature_names
+df = pd.<span class="fn">DataFrame</span>(X, columns=feature_names)
+<span class="op">print</span>(<span class="st">"First 5 rows of Dataset:\n"</span>)
+<span class="op">print</span>(df.<span class="fn">head</span>())
+
+<span class="cm"># STEP 2: Standardize the Data</span>
+scaler = <span class="cl">StandardScaler</span>()
+X_scaled = scaler.<span class="fn">fit_transform</span>(X)
+<span class="op">print</span>(<span class="st">"\nStandardized Data Shape:"</span>, X_scaled.shape)
+
+<span class="cm"># STEP 3: Matrix Representation</span>
+<span class="op">print</span>(<span class="st">"\nMatrix Representation:"</span>)
+<span class="op">print</span>(X_scaled)
+
+<span class="cm"># STEP 4: Covariance Matrix</span>
+cov_matrix = np.<span class="fn">cov</span>(X_scaled.T)
+<span class="op">print</span>(<span class="st">"\nCovariance Matrix:\n"</span>, cov_matrix)
+
+<span class="cm"># STEP 5: Eigenvalues and Eigenvectors</span>
+eigenvalues, eigenvectors = np.linalg.<span class="fn">eig</span>(cov_matrix)
+<span class="op">print</span>(<span class="st">"\nEigenvalues:\n"</span>, eigenvalues)
+<span class="op">print</span>(<span class="st">"\nEigenvectors:\n"</span>, eigenvectors)
+
+<span class="cm"># STEP 6: Sort by Eigenvalue</span>
+sorted_index = np.<span class="fn">argsort</span>(eigenvalues)[::-<span class="nm">1</span>]
+sorted_eigenvalues  = eigenvalues[sorted_index]
+sorted_eigenvectors = eigenvectors[:, sorted_index]
+<span class="op">print</span>(<span class="st">"\nSorted Eigenvalues:\n"</span>, sorted_eigenvalues)
+
+<span class="cm"># STEP 7: Select 2 Principal Components</span>
+n_components = <span class="nm">2</span>
+principal_components = sorted_eigenvectors[:, :n_components]
+<span class="op">print</span>(<span class="st">"\nPrincipal Components:\n"</span>, principal_components)
+
+<span class="cm"># STEP 8: Transform Data</span>
+X_pca = np.<span class="fn">dot</span>(X_scaled, principal_components)
+<span class="op">print</span>(<span class="st">"\nTransformed Dataset Shape:"</span>, X_pca.shape)
+
+<span class="cm"># STEP 9: PCA DataFrame</span>
+pca_df = pd.<span class="fn">DataFrame</span>(
+    data=X_pca,
+    columns=[<span class="st">'Principal Component 1'</span>, <span class="st">'Principal Component 2'</span>]
+)
+pca_df[<span class="st">'Target'</span>] = y
+<span class="op">print</span>(<span class="st">"\nPCA DataFrame:\n"</span>, pca_df.<span class="fn">head</span>())
+
+<span class="cm"># STEP 10: Explained Variance</span>
+explained_variance = sorted_eigenvalues / np.<span class="fn">sum</span>(sorted_eigenvalues)
+<span class="op">print</span>(<span class="st">"\nExplained Variance Ratio:\n"</span>, explained_variance)
+
+<span class="cm"># STEP 11: Visualization</span>
+plt.<span class="fn">figure</span>(figsize=(<span class="nm">8</span>, <span class="nm">6</span>))
+labels = iris.target_names
+<span class="kw">for</span> i <span class="kw">in</span> <span class="op">range</span>(<span class="nm">3</span>):
+    plt.<span class="fn">scatter</span>(X_pca[y == i, <span class="nm">0</span>], X_pca[y == i, <span class="nm">1</span>], label=labels[i])
+plt.<span class="fn">xlabel</span>(<span class="st">'Principal Component 1'</span>)
+plt.<span class="fn">ylabel</span>(<span class="st">'Principal Component 2'</span>)
+plt.<span class="fn">title</span>(<span class="st">'PCA on Iris Dataset'</span>)
+plt.<span class="fn">legend</span>()
+plt.<span class="fn">grid</span>(<span class="kw">True</span>)
+plt.<span class="fn">show</span>()
+
+<span class="cm"># STEP 12: Analysis</span>
+<span class="op">print</span>(<span class="st">"\nANALYSIS:"</span>)
+<span class="op">print</span>(<span class="st">"1. PCA reduces dimensionality while preserving maximum variance."</span>)
+<span class="op">print</span>(<span class="st">"2. Covariance matrix shows relationships between features."</span>)
+<span class="op">print</span>(<span class="st">"3. Eigenvalues represent variance captured by each component."</span>)
+<span class="op">print</span>(<span class="st">"4. Eigenvectors represent directions of principal components."</span>)
+<span class="op">print</span>(<span class="st">"5. First two PCs capture most of the dataset information."</span>)`
+  },
+  {
+    id: 10,
+    num: "Practical 2",
+    category: "prob",
+    tag: "prob",
+    tagLabel: "Probability",
+    title: "Probability Distributions — Bernoulli, Binomial, Poisson, Normal, Chi-Square",
+    desc: "Generates and plots 5 probability distributions (discrete & continuous) using scipy.stats with mean, variance and theoretical curves.",
+    code: `<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">from</span> scipy.stats <span class="kw">import</span> bernoulli, binom, poisson, norm, chi2
+
+np.random.<span class="fn">seed</span>(<span class="nm">42</span>)
+
+<span class="cm"># ── A) DISCRETE DISTRIBUTIONS ──────────────────────────────────</span>
+
+<span class="cm"># 1. Bernoulli Distribution</span>
+<span class="cm"># Two outcomes: Success=1, Failure=0</span>
+p = <span class="nm">0.7</span>
+bernoulli_data = bernoulli.<span class="fn">rvs</span>(p, size=<span class="nm">1000</span>)
+<span class="op">print</span>(<span class="st">"== BERNOULLI DISTRIBUTION =="</span>)
+<span class="op">print</span>(<span class="st">"Mean:"</span>, np.<span class="fn">mean</span>(bernoulli_data))
+<span class="op">print</span>(<span class="st">"Variance:"</span>, np.<span class="fn">var</span>(bernoulli_data))
+plt.<span class="fn">figure</span>(figsize=(<span class="nm">6</span>, <span class="nm">4</span>))
+plt.<span class="fn">hist</span>(bernoulli_data, bins=<span class="nm">2</span>, density=<span class="kw">True</span>, edgecolor=<span class="st">'black'</span>)
+plt.<span class="fn">title</span>(<span class="st">"Bernoulli Distribution"</span>)
+plt.<span class="fn">xlabel</span>(<span class="st">"Outcome"</span>); plt.<span class="fn">ylabel</span>(<span class="st">"Probability"</span>)
+plt.<span class="fn">grid</span>(<span class="kw">True</span>); plt.<span class="fn">show</span>()
+
+<span class="cm"># 2. Binomial Distribution</span>
+<span class="cm"># Number of successes in n independent Bernoulli trials</span>
+n, p = <span class="nm">10</span>, <span class="nm">0.5</span>
+binomial_data = binom.<span class="fn">rvs</span>(n, p, size=<span class="nm">1000</span>)
+<span class="op">print</span>(<span class="st">"\n== BINOMIAL DISTRIBUTION =="</span>)
+<span class="op">print</span>(<span class="st">"Mean:"</span>, np.<span class="fn">mean</span>(binomial_data))
+<span class="op">print</span>(<span class="st">"Variance:"</span>, np.<span class="fn">var</span>(binomial_data))
+plt.<span class="fn">figure</span>(figsize=(<span class="nm">7</span>, <span class="nm">4</span>))
+plt.<span class="fn">hist</span>(binomial_data, bins=<span class="nm">10</span>, density=<span class="kw">True</span>, edgecolor=<span class="st">'black'</span>)
+plt.<span class="fn">title</span>(<span class="st">"Binomial Distribution"</span>)
+plt.<span class="fn">xlabel</span>(<span class="st">"Number of Successes"</span>); plt.<span class="fn">ylabel</span>(<span class="st">"Probability"</span>)
+plt.<span class="fn">grid</span>(<span class="kw">True</span>); plt.<span class="fn">show</span>()
+
+<span class="cm"># 3. Poisson Distribution</span>
+<span class="cm"># Models rare events occurring independently</span>
+lambda_value = <span class="nm">4</span>
+poisson_data = poisson.<span class="fn">rvs</span>(mu=lambda_value, size=<span class="nm">1000</span>)
+<span class="op">print</span>(<span class="st">"\n== POISSON DISTRIBUTION =="</span>)
+<span class="op">print</span>(<span class="st">"Mean:"</span>, np.<span class="fn">mean</span>(poisson_data))
+<span class="op">print</span>(<span class="st">"Variance:"</span>, np.<span class="fn">var</span>(poisson_data))
+plt.<span class="fn">figure</span>(figsize=(<span class="nm">7</span>, <span class="nm">4</span>))
+plt.<span class="fn">hist</span>(poisson_data, bins=<span class="nm">15</span>, density=<span class="kw">True</span>, edgecolor=<span class="st">'black'</span>)
+plt.<span class="fn">title</span>(<span class="st">"Poisson Distribution"</span>)
+plt.<span class="fn">xlabel</span>(<span class="st">"Events"</span>); plt.<span class="fn">ylabel</span>(<span class="st">"Probability"</span>)
+plt.<span class="fn">grid</span>(<span class="kw">True</span>); plt.<span class="fn">show</span>()
+
+<span class="cm"># ── B) CONTINUOUS DISTRIBUTIONS ────────────────────────────────</span>
+
+<span class="cm"># 4. Gaussian (Normal) Distribution</span>
+<span class="cm"># Symmetric bell-shaped distribution</span>
+mean, std_dev = <span class="nm">0</span>, <span class="nm">1</span>
+normal_data = norm.<span class="fn">rvs</span>(loc=mean, scale=std_dev, size=<span class="nm">1000</span>)
+<span class="op">print</span>(<span class="st">"\n== NORMAL DISTRIBUTION =="</span>)
+<span class="op">print</span>(<span class="st">"Mean:"</span>, np.<span class="fn">mean</span>(normal_data))
+<span class="op">print</span>(<span class="st">"Variance:"</span>, np.<span class="fn">var</span>(normal_data))
+plt.<span class="fn">figure</span>(figsize=(<span class="nm">7</span>, <span class="nm">4</span>))
+plt.<span class="fn">hist</span>(normal_data, bins=<span class="nm">30</span>, density=<span class="kw">True</span>, edgecolor=<span class="st">'black'</span>)
+x = np.<span class="fn">linspace</span>(-<span class="nm">4</span>, <span class="nm">4</span>, <span class="nm">1000</span>)
+plt.<span class="fn">plot</span>(x, norm.<span class="fn">pdf</span>(x, mean, std_dev), linewidth=<span class="nm">2</span>)   <span class="cm"># theoretical curve</span>
+plt.<span class="fn">title</span>(<span class="st">"Gaussian (Normal) Distribution"</span>)
+plt.<span class="fn">xlabel</span>(<span class="st">"Value"</span>); plt.<span class="fn">ylabel</span>(<span class="st">"Density"</span>)
+plt.<span class="fn">grid</span>(<span class="kw">True</span>); plt.<span class="fn">show</span>()
+
+<span class="cm"># 5. Chi-Square Distribution</span>
+<span class="cm"># Used in hypothesis testing</span>
+degrees_of_freedom = <span class="nm">5</span>
+chi_square_data = chi2.<span class="fn">rvs</span>(df=degrees_of_freedom, size=<span class="nm">1000</span>)
+<span class="op">print</span>(<span class="st">"\n== CHI-SQUARE DISTRIBUTION =="</span>)
+<span class="op">print</span>(<span class="st">"Mean:"</span>, np.<span class="fn">mean</span>(chi_square_data))
+<span class="op">print</span>(<span class="st">"Variance:"</span>, np.<span class="fn">var</span>(chi_square_data))
+plt.<span class="fn">figure</span>(figsize=(<span class="nm">7</span>, <span class="nm">4</span>))
+plt.<span class="fn">hist</span>(chi_square_data, bins=<span class="nm">30</span>, density=<span class="kw">True</span>, edgecolor=<span class="st">'black'</span>)
+x = np.<span class="fn">linspace</span>(<span class="nm">0</span>, <span class="nm">20</span>, <span class="nm">1000</span>)
+plt.<span class="fn">plot</span>(x, chi2.<span class="fn">pdf</span>(x, degrees_of_freedom), linewidth=<span class="nm">2</span>)  <span class="cm"># theoretical curve</span>
+plt.<span class="fn">title</span>(<span class="st">"Chi-Square Distribution"</span>)
+plt.<span class="fn">xlabel</span>(<span class="st">"Value"</span>); plt.<span class="fn">ylabel</span>(<span class="st">"Density"</span>)
+plt.<span class="fn">grid</span>(<span class="kw">True</span>); plt.<span class="fn">show</span>()
+
+<span class="cm"># ── FINAL ANALYSIS ──────────────────────────────────────────────</span>
+<span class="op">print</span>(<span class="st">"""
+1. Bernoulli : binary outcomes (0/1). Variance highest near p=0.5.
+2. Binomial  : successes in fixed trials. Mean = n*p.
+3. Poisson   : rare events. Mean ≈ Variance.
+4. Normal    : bell-curve. Mean = Median = Mode.
+5. Chi-Square: positively skewed. Used in statistical testing.
+"""</span>)`
+  },
+  {
+    id: 2,
+    num: "Practical 3",
+    category: "stats",
+    tag: "stats",
+    tagLabel: "Statistics",
+    title: "Statistical Tests — Wilcoxon Rank-Sum & ANOVA",
+    desc: "Non-parametric Wilcoxon Rank-Sum test and one-way ANOVA using scipy.stats to detect significant group differences.",
+    code: `<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">from</span> scipy.stats <span class="kw">import</span> mannwhitneyu, f_oneway
+
+<span class="cm"># Wilcoxon Rank-Sum Test</span>
+group1 = [<span class="nm">10</span>, <span class="nm">12</span>, <span class="nm">14</span>, <span class="nm">15</span>, <span class="nm">18</span>]
+group2 = [<span class="nm">20</span>, <span class="nm">22</span>, <span class="nm">24</span>, <span class="nm">25</span>, <span class="nm">28</span>]
+
+stat, p = <span class="fn">mannwhitneyu</span>(group1, group2)
+<span class="op">print</span>(<span class="st">"Wilcoxon Rank-Sum Test"</span>)
+<span class="op">print</span>(<span class="st">"P-value:"</span>, p)
+<span class="kw">if</span> p &lt; <span class="nm">0.05</span>:
+    <span class="op">print</span>(<span class="st">"Significant difference found"</span>)
+<span class="kw">else</span>:
+    <span class="op">print</span>(<span class="st">"No significant difference"</span>)
+
+<span class="cm"># ANOVA Test</span>
+A = [<span class="nm">10</span>, <span class="nm">12</span>, <span class="nm">14</span>, <span class="nm">16</span>, <span class="nm">18</span>]
+B = [<span class="nm">20</span>, <span class="nm">22</span>, <span class="nm">24</span>, <span class="nm">26</span>, <span class="nm">28</span>]
+C = [<span class="nm">30</span>, <span class="nm">32</span>, <span class="nm">34</span>, <span class="nm">36</span>, <span class="nm">38</span>]
+
+f_stat, p_value = <span class="fn">f_oneway</span>(A, B, C)
+<span class="op">print</span>(<span class="st">"\nANOVA Test"</span>)
+<span class="op">print</span>(<span class="st">"P-value:"</span>, p_value)
+<span class="kw">if</span> p_value &lt; <span class="nm">0.05</span>:
+    <span class="op">print</span>(<span class="st">"Significant difference among groups"</span>)
+<span class="kw">else</span>:
+    <span class="op">print</span>(<span class="st">"No significant difference"</span>)`
+  },
+  {
+    id: 3,
+    num: "Practical 4",
+    category: "nlp",
+    tag: "nlp",
+    tagLabel: "NLP / Similarity",
+    title: "Shingling, Jaccard Similarity, MinHash & LSH",
+    desc: "Document similarity pipeline: k-shingles → Jaccard index → MinHash signature → Locality Sensitive Hashing bucket assignment.",
+    code: `<span class="kw">import</span> random
+
+doc1 = <span class="st">"data science is very useful"</span>
+doc2 = <span class="st">"data mining and data science"</span>
+
+<span class="kw">def</span> <span class="fn">shingles</span>(<span class="pm">text</span>, <span class="pm">k</span>=<span class="nm">2</span>):
+    words = text.<span class="fn">split</span>()
+    <span class="kw">return</span> <span class="op">set</span>([<span class="st">' '</span>.<span class="fn">join</span>(words[i:i+k]) <span class="kw">for</span> i <span class="kw">in</span> <span class="op">range</span>(<span class="op">len</span>(words)-k+<span class="nm">1</span>)])
+
+s1 = <span class="fn">shingles</span>(doc1)
+s2 = <span class="fn">shingles</span>(doc2)
+<span class="op">print</span>(<span class="st">"Shingles of Document 1:"</span>); <span class="op">print</span>(s1)
+<span class="op">print</span>(<span class="st">"\nShingles of Document 2:"</span>); <span class="op">print</span>(s2)
+
+<span class="cm"># Jaccard Similarity</span>
+intersection = <span class="op">len</span>(s1 &amp; s2)
+union        = <span class="op">len</span>(s1 | s2)
+jaccard      = intersection / union
+<span class="op">print</span>(<span class="st">"\nJaccard Similarity:"</span>, jaccard)
+
+<span class="cm"># MinHash</span>
+all_shingles = <span class="op">list</span>(s1 | s2)
+v1 = [<span class="nm">1</span> <span class="kw">if</span> sh <span class="kw">in</span> s1 <span class="kw">else</span> <span class="nm">0</span> <span class="kw">for</span> sh <span class="kw">in</span> all_shingles]
+v2 = [<span class="nm">1</span> <span class="kw">if</span> sh <span class="kw">in</span> s2 <span class="kw">else</span> <span class="nm">0</span> <span class="kw">for</span> sh <span class="kw">in</span> all_shingles]
+perm = <span class="op">list</span>(<span class="op">range</span>(<span class="op">len</span>(all_shingles)))
+random.<span class="fn">shuffle</span>(perm)
+
+<span class="kw">def</span> <span class="fn">minhash</span>(<span class="pm">vector</span>, <span class="pm">perm</span>):
+    <span class="kw">for</span> i <span class="kw">in</span> perm:
+        <span class="kw">if</span> vector[i] == <span class="nm">1</span>:
+            <span class="kw">return</span> i
+
+mh1 = <span class="fn">minhash</span>(v1, perm)
+mh2 = <span class="fn">minhash</span>(v2, perm)
+<span class="op">print</span>(<span class="st">"\nMinHash Value of Document 1:"</span>, mh1)
+<span class="op">print</span>(<span class="st">"MinHash Value of Document 2:"</span>, mh2)
+
+<span class="cm"># LSH Bucketing</span>
+bucket1 = mh1 % <span class="nm">5</span>
+bucket2 = mh2 % <span class="nm">5</span>
+<span class="op">print</span>(<span class="st">"\nLSH Bucket for Document 1:"</span>, bucket1)
+<span class="op">print</span>(<span class="st">"LSH Bucket for Document 2:"</span>, bucket2)
+<span class="kw">if</span> bucket1 == bucket2:
+    <span class="op">print</span>(<span class="st">"Documents are likely similar"</span>)
+<span class="kw">else</span>:
+    <span class="op">print</span>(<span class="st">"Documents are not similar"</span>)
+
+<span class="op">print</span>(<span class="st">"""
+--- Analysis ---
+1. Shingling converts documents into sets of word groups.
+2. Jaccard Similarity measures similarity between two sets.
+3. Min-Hashing generates compact signatures.
+4. LSH places similar items into the same bucket.
+"""</span>)`
+  },
+  {
+    id: 4,
+    num: "Practical 5",
+    category: "math",
+    tag: "math",
+    tagLabel: "Math / Distance",
+    title: "Distance & Similarity Measures",
+    desc: "Euclidean distance, triangle inequality, cosine similarity, Jaccard similarity, and edit distance with 2D vector visualizations.",
+    code: `<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">from</span> sklearn.metrics.pairwise <span class="kw">import</span> cosine_similarity
+
+A = np.<span class="fn">array</span>([<span class="nm">2</span>, <span class="nm">3</span>])
+B = np.<span class="fn">array</span>([<span class="nm">4</span>, <span class="nm">7</span>])
+C = np.<span class="fn">array</span>([<span class="nm">5</span>, <span class="nm">4</span>])
+points = {<span class="st">'A'</span>: A, <span class="st">'B'</span>: B, <span class="st">'C'</span>: C}
+
+<span class="kw">def</span> <span class="fn">euclidean</span>(<span class="pm">x</span>, <span class="pm">y</span>):
+    <span class="kw">return</span> np.<span class="fn">sqrt</span>(np.<span class="fn">sum</span>((x - y) ** <span class="nm">2</span>))
+
+dAB = <span class="fn">euclidean</span>(A, B)
+dBC = <span class="fn">euclidean</span>(B, C)
+dAC = <span class="fn">euclidean</span>(A, C)
+<span class="op">print</span>(<span class="st">"Euclidean Distances"</span>)
+<span class="op">print</span>(<span class="st">"A-B:"</span>, dAB); <span class="op">print</span>(<span class="st">"B-C:"</span>, dBC); <span class="op">print</span>(<span class="st">"A-C:"</span>, dAC)
+<span class="op">print</span>(<span class="st">"\nTriangle Inequality Check"</span>)
+<span class="op">print</span>(<span class="st">"A-C &lt;= A-B + B-C :"</span>, dAC &lt;= (dAB + dBC))
+
+<span class="cm"># Cosine Similarity</span>
+cosAB = <span class="fn">cosine_similarity</span>([A], [B])[<span class="nm">0</span>][<span class="nm">0</span>]
+cosBC = <span class="fn">cosine_similarity</span>([B], [C])[<span class="nm">0</span>][<span class="nm">0</span>]
+cosAC = <span class="fn">cosine_similarity</span>([A], [C])[<span class="nm">0</span>][<span class="nm">0</span>]
+<span class="op">print</span>(<span class="st">"\nCosine Similarity"</span>)
+<span class="op">print</span>(<span class="st">"A-B:"</span>, cosAB); <span class="op">print</span>(<span class="st">"B-C:"</span>, cosBC); <span class="op">print</span>(<span class="st">"A-C:"</span>, cosAC)
+
+<span class="cm"># Jaccard Similarity</span>
+set1 = {<span class="nm">1</span>, <span class="nm">2</span>, <span class="nm">3</span>, <span class="nm">4</span>}
+set2 = {<span class="nm">3</span>, <span class="nm">4</span>, <span class="nm">5</span>, <span class="nm">6</span>}
+jaccard = <span class="op">len</span>(set1 &amp; set2) / <span class="op">len</span>(set1 | set2)
+<span class="op">print</span>(<span class="st">"\nJaccard Similarity:"</span>, jaccard)
+
+<span class="cm"># Edit Distance (Levenshtein)</span>
+<span class="kw">def</span> <span class="fn">edit_distance</span>(<span class="pm">s1</span>, <span class="pm">s2</span>):
+    dp = [[<span class="nm">0</span>] * (<span class="op">len</span>(s2) + <span class="nm">1</span>) <span class="kw">for</span> _ <span class="kw">in</span> <span class="op">range</span>(<span class="op">len</span>(s1) + <span class="nm">1</span>)]
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="op">range</span>(<span class="op">len</span>(s1) + <span class="nm">1</span>): dp[i][<span class="nm">0</span>] = i
+    <span class="kw">for</span> j <span class="kw">in</span> <span class="op">range</span>(<span class="op">len</span>(s2) + <span class="nm">1</span>): dp[<span class="nm">0</span>][j] = j
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="op">range</span>(<span class="nm">1</span>, <span class="op">len</span>(s1) + <span class="nm">1</span>):
+        <span class="kw">for</span> j <span class="kw">in</span> <span class="op">range</span>(<span class="nm">1</span>, <span class="op">len</span>(s2) + <span class="nm">1</span>):
+            cost = <span class="nm">0</span> <span class="kw">if</span> s1[i-<span class="nm">1</span>] == s2[j-<span class="nm">1</span>] <span class="kw">else</span> <span class="nm">1</span>
+            dp[i][j] = <span class="op">min</span>(dp[i-<span class="nm">1</span>][j]+<span class="nm">1</span>, dp[i][j-<span class="nm">1</span>]+<span class="nm">1</span>, dp[i-<span class="nm">1</span>][j-<span class="nm">1</span>]+cost)
+    <span class="kw">return</span> dp[-<span class="nm">1</span>][-<span class="nm">1</span>]
+
+edit = <span class="fn">edit_distance</span>(<span class="st">"data"</span>, <span class="st">"date"</span>)
+<span class="op">print</span>(<span class="st">"\nEdit Distance:"</span>, edit)
+
+<span class="cm"># Plots</span>
+<span class="kw">for</span> labels, values, title, ylabel <span class="kw">in</span> [
+    ([<span class="st">'A-B'</span>,<span class="st">'B-C'</span>,<span class="st">'A-C'</span>], [dAB,dBC,dAC], <span class="st">"Euclidean Distance"</span>, <span class="st">"Distance"</span>),
+    ([<span class="st">'A-B'</span>,<span class="st">'B-C'</span>,<span class="st">'A-C'</span>], [cosAB,cosBC,cosAC], <span class="st">"Cosine Similarity"</span>, <span class="st">"Similarity"</span>),
+]:
+    plt.<span class="fn">figure</span>()
+    bars = plt.<span class="fn">bar</span>(labels, values)
+    <span class="kw">for</span> bar <span class="kw">in</span> bars:
+        y = bar.<span class="fn">get_height</span>()
+        plt.<span class="fn">text</span>(bar.<span class="fn">get_x</span>()+bar.<span class="fn">get_width</span>()/<span class="nm">2</span>, y, <span class="st">f"{y:.2f}"</span>, ha=<span class="st">'center'</span>, va=<span class="st">'bottom'</span>)
+    plt.<span class="fn">title</span>(title); plt.<span class="fn">ylabel</span>(ylabel); plt.<span class="fn">show</span>()
+
+<span class="cm"># 2D Vector Plot</span>
+plt.<span class="fn">figure</span>()
+<span class="kw">for</span> name, point <span class="kw">in</span> points.items():
+    plt.<span class="fn">scatter</span>(point[<span class="nm">0</span>], point[<span class="nm">1</span>])
+    plt.<span class="fn">text</span>(point[<span class="nm">0</span>]+<span class="nm">0.1</span>, point[<span class="nm">1</span>]+<span class="nm">0.1</span>, name)
+plt.<span class="fn">plot</span>([A[<span class="nm">0</span>],B[<span class="nm">0</span>]], [A[<span class="nm">1</span>],B[<span class="nm">1</span>]])
+plt.<span class="fn">plot</span>([B[<span class="nm">0</span>],C[<span class="nm">0</span>]], [B[<span class="nm">1</span>],C[<span class="nm">1</span>]])
+plt.<span class="fn">plot</span>([A[<span class="nm">0</span>],C[<span class="nm">0</span>]], [A[<span class="nm">1</span>],C[<span class="nm">1</span>]])
+plt.<span class="fn">title</span>(<span class="st">"2D Representation of Vectors"</span>); plt.<span class="fn">grid</span>(); plt.<span class="fn">show</span>()`
+  },
+  {
+    id: 5,
+    num: "Practical 6A",
+    category: "math",
+    tag: "math",
+    tagLabel: "Math / Optimization",
+    title: "Gradient Descent & Newton's Method (f(x,y) = x²+y²)",
+    desc: "Minimise a simple quadratic using gradient descent and Newton's method. Plots both optimisation paths on a contour.",
+    code: `<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+
+<span class="kw">def</span> <span class="fn">f</span>(<span class="pm">x</span>, <span class="pm">y</span>): <span class="kw">return</span> x**<span class="nm">2</span> + y**<span class="nm">2</span>
+<span class="kw">def</span> <span class="fn">grad</span>(<span class="pm">x</span>, <span class="pm">y</span>): <span class="kw">return</span> np.<span class="fn">array</span>([<span class="nm">2</span>*x, <span class="nm">2</span>*y])
+
+H = np.<span class="fn">array</span>([[<span class="nm">2</span>, <span class="nm">0</span>], [<span class="nm">0</span>, <span class="nm">2</span>]])  <span class="cm"># Hessian</span>
+
+<span class="cm"># Gradient Descent</span>
+x = np.<span class="fn">array</span>([<span class="nm">3.0</span>, <span class="nm">3.0</span>])
+lr = <span class="nm">0.1</span>
+gd_path = []
+<span class="kw">for</span> i <span class="kw">in</span> <span class="op">range</span>(<span class="nm">20</span>):
+    g = <span class="fn">grad</span>(x[<span class="nm">0</span>], x[<span class="nm">1</span>])
+    x = x - lr * g
+    gd_path.<span class="fn">append</span>(x.<span class="fn">copy</span>())
+gd_path = np.<span class="fn">array</span>(gd_path)
+<span class="op">print</span>(<span class="st">"Gradient Descent Minimum:"</span>, x)
+
+<span class="cm"># Newton's Method</span>
+x_newton = np.<span class="fn">array</span>([<span class="nm">3.0</span>, <span class="nm">3.0</span>])
+newton_path = []
+<span class="kw">for</span> i <span class="kw">in</span> <span class="op">range</span>(<span class="nm">5</span>):
+    g    = <span class="fn">grad</span>(x_newton[<span class="nm">0</span>], x_newton[<span class="nm">1</span>])
+    step = np.linalg.<span class="fn">inv</span>(H).<span class="fn">dot</span>(g)
+    x_newton = x_newton - step
+    newton_path.<span class="fn">append</span>(x_newton.<span class="fn">copy</span>())
+newton_path = np.<span class="fn">array</span>(newton_path)
+<span class="op">print</span>(<span class="st">"Newton Method Minimum:"</span>, x_newton)
+
+<span class="cm"># Contour Plot</span>
+x_vals = np.<span class="fn">linspace</span>(-<span class="nm">4</span>, <span class="nm">4</span>, <span class="nm">100</span>)
+y_vals = np.<span class="fn">linspace</span>(-<span class="nm">4</span>, <span class="nm">4</span>, <span class="nm">100</span>)
+X, Y  = np.<span class="fn">meshgrid</span>(x_vals, y_vals)
+Z     = X**<span class="nm">2</span> + Y**<span class="nm">2</span>
+
+plt.<span class="fn">figure</span>()
+plt.<span class="fn">contour</span>(X, Y, Z, <span class="nm">20</span>)
+plt.<span class="fn">plot</span>(gd_path[:,<span class="nm">0</span>], gd_path[:,<span class="nm">1</span>], <span class="st">'o-'</span>, label=<span class="st">"Gradient Descent Path"</span>)
+plt.<span class="fn">plot</span>(newton_path[:,<span class="nm">0</span>], newton_path[:,<span class="nm">1</span>], <span class="st">'s-'</span>, label=<span class="st">"Newton Method Path"</span>)
+plt.<span class="fn">scatter</span>(<span class="nm">0</span>, <span class="nm">0</span>)
+plt.<span class="fn">title</span>(<span class="st">"Optimization Paths"</span>)
+plt.<span class="fn">xlabel</span>(<span class="st">"x"</span>); plt.<span class="fn">ylabel</span>(<span class="st">"y"</span>)
+plt.<span class="fn">legend</span>(); plt.<span class="fn">show</span>()`
+  },
+  {
+    id: 6,
+    num: "Practical 6B",
+    category: "math",
+    tag: "math",
+    tagLabel: "Math / Regression",
+    title: "Linear Regression — Gradient Descent & Newton (California Housing)",
+    desc: "Fit a linear regression model on the California housing dataset using both gradient descent and Newton's method. Plots cost reduction and regression line.",
+    code: `<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">from</span> sklearn.datasets <span class="kw">import</span> fetch_california_housing
+
+housing = <span class="fn">fetch_california_housing</span>()
+X = housing.data[:, <span class="nm">0</span>]
+y = housing.target
+
+X = (X - np.<span class="fn">mean</span>(X)) / np.<span class="fn">std</span>(X)   <span class="cm"># normalize</span>
+X = np.<span class="fn">vstack</span>([np.<span class="fn">ones</span>(<span class="op">len</span>(X)), X]).T
+
+<span class="kw">def</span> <span class="fn">cost</span>(<span class="pm">theta</span>, <span class="pm">X</span>, <span class="pm">y</span>):
+    m    = <span class="op">len</span>(y)
+    pred = X.<span class="fn">dot</span>(theta)
+    <span class="kw">return</span> np.<span class="fn">sum</span>((pred - y)**<span class="nm">2</span>) / (<span class="nm">2</span> * m)
+
+<span class="kw">def</span> <span class="fn">gradient</span>(<span class="pm">theta</span>, <span class="pm">X</span>, <span class="pm">y</span>):
+    m    = <span class="op">len</span>(y)
+    pred = X.<span class="fn">dot</span>(theta)
+    <span class="kw">return</span> (<span class="nm">1</span>/m) * X.T.<span class="fn">dot</span>(pred - y)
+
+<span class="cm"># Gradient Descent</span>
+theta = np.<span class="fn">zeros</span>(<span class="nm">2</span>)
+lr    = <span class="nm">0.1</span>
+cost_history = []
+<span class="kw">for</span> i <span class="kw">in</span> <span class="op">range</span>(<span class="nm">100</span>):
+    g     = <span class="fn">gradient</span>(theta, X, y)
+    theta = theta - lr * g
+    cost_history.<span class="fn">append</span>(<span class="fn">cost</span>(theta, X, y))
+<span class="op">print</span>(<span class="st">"Gradient Descent Parameters:"</span>, theta)
+
+<span class="cm"># Newton's Method</span>
+theta_newton = np.<span class="fn">zeros</span>(<span class="nm">2</span>)
+<span class="kw">for</span> i <span class="kw">in</span> <span class="op">range</span>(<span class="nm">5</span>):
+    m              = <span class="op">len</span>(y)
+    pred           = X.<span class="fn">dot</span>(theta_newton)
+    grad_val       = (<span class="nm">1</span>/m) * X.T.<span class="fn">dot</span>(pred - y)
+    H              = (<span class="nm">1</span>/m) * X.T.<span class="fn">dot</span>(X)
+    theta_newton   = theta_newton - np.linalg.<span class="fn">inv</span>(H).<span class="fn">dot</span>(grad_val)
+<span class="op">print</span>(<span class="st">"Newton Method Parameters:"</span>, theta_newton)
+
+<span class="cm"># Cost Reduction Plot</span>
+plt.<span class="fn">figure</span>()
+plt.<span class="fn">plot</span>(cost_history)
+plt.<span class="fn">title</span>(<span class="st">"Cost Function Reduction — Gradient Descent"</span>)
+plt.<span class="fn">xlabel</span>(<span class="st">"Iterations"</span>); plt.<span class="fn">ylabel</span>(<span class="st">"Cost"</span>); plt.<span class="fn">show</span>()
+
+<span class="cm"># Regression Line Plot</span>
+plt.<span class="fn">figure</span>()
+plt.<span class="fn">scatter</span>(X[:,<span class="nm">1</span>], y, label=<span class="st">"Data Points"</span>)
+y_pred = X.<span class="fn">dot</span>(theta)
+plt.<span class="fn">plot</span>(X[:,<span class="nm">1</span>], y_pred, label=<span class="st">"Regression Line"</span>)
+plt.<span class="fn">title</span>(<span class="st">"Linear Regression — Gradient Descent"</span>)
+plt.<span class="fn">xlabel</span>(<span class="st">"Median Income (Normalized)"</span>)
+plt.<span class="fn">ylabel</span>(<span class="st">"House Price"</span>)
+plt.<span class="fn">legend</span>(); plt.<span class="fn">show</span>()`
+  },
+  {
+    id: 7,
+    num: "Practical 7",
+    category: "nn",
+    tag: "nn",
+    tagLabel: "Neural Networks",
+    title: "Perceptron, LTU & MLP Classifier — Iris Dataset",
+    desc: "Compares a manual LTU, scikit-learn Perceptron, and MLPClassifier on the Iris dataset. Plots decision boundaries and accuracy comparison.",
+    code: `<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">from</span> sklearn.datasets <span class="kw">import</span> load_iris
+<span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> Perceptron
+<span class="kw">from</span> sklearn.neural_network <span class="kw">import</span> MLPClassifier
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> accuracy_score
+
+iris = <span class="fn">load_iris</span>()
+X = iris.data[:, :<span class="nm">2</span>]
+y = (iris.target == <span class="nm">0</span>).<span class="fn">astype</span>(<span class="op">int</span>)
+feature_names = iris.feature_names[:<span class="nm">2</span>]
+
+<span class="cm"># Dataset distribution</span>
+plt.<span class="fn">figure</span>()
+plt.<span class="fn">scatter</span>(X[:,<span class="nm">0</span>], X[:,<span class="nm">1</span>], c=y)
+plt.<span class="fn">title</span>(<span class="st">"Iris Dataset Distribution"</span>)
+plt.<span class="fn">xlabel</span>(feature_names[<span class="nm">0</span>]); plt.<span class="fn">ylabel</span>(feature_names[<span class="nm">1</span>]); plt.<span class="fn">show</span>()
+
+X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(X, y, test_size=<span class="nm">0.3</span>, random_state=<span class="nm">0</span>)
+
+<span class="cm"># Manual LTU</span>
+weights = np.random.<span class="fn">rand</span>(<span class="nm">2</span>)
+bias = <span class="nm">0.5</span>
+<span class="kw">def</span> <span class="fn">LTU</span>(<span class="pm">x</span>):
+    <span class="kw">return</span> <span class="nm">1</span> <span class="kw">if</span> np.<span class="fn">dot</span>(weights, x) + bias >= <span class="nm">0</span> <span class="kw">else</span> <span class="nm">0</span>
+ltu_pred = [<span class="fn">LTU</span>(x) <span class="kw">for</span> x <span class="kw">in</span> X_test]
+
+<span class="cm"># Perceptron</span>
+per = <span class="cl">Perceptron</span>()
+per.<span class="fn">fit</span>(X_train, y_train)
+y_pred_per = per.<span class="fn">predict</span>(X_test)
+acc_per = <span class="fn">accuracy_score</span>(y_test, y_pred_per)
+<span class="op">print</span>(<span class="st">"Perceptron Accuracy:"</span>, acc_per)
+
+<span class="cm"># Neural Network (MLP)</span>
+mlp = <span class="cl">MLPClassifier</span>(hidden_layer_sizes=(<span class="nm">5</span>,), max_iter=<span class="nm">2000</span>)
+mlp.<span class="fn">fit</span>(X_train, y_train)
+y_pred_mlp = mlp.<span class="fn">predict</span>(X_test)
+acc_mlp = <span class="fn">accuracy_score</span>(y_test, y_pred_mlp)
+<span class="op">print</span>(<span class="st">"Neural Network Accuracy:"</span>, acc_mlp)
+
+<span class="kw">def</span> <span class="fn">plot_decision_boundary</span>(<span class="pm">model</span>, <span class="pm">title</span>):
+    x_min, x_max = X[:,<span class="nm">0</span>].<span class="fn">min</span>()-<span class="nm">1</span>, X[:,<span class="nm">0</span>].<span class="fn">max</span>()+<span class="nm">1</span>
+    y_min, y_max = X[:,<span class="nm">1</span>].<span class="fn">min</span>()-<span class="nm">1</span>, X[:,<span class="nm">1</span>].<span class="fn">max</span>()+<span class="nm">1</span>
+    xx, yy = np.<span class="fn">meshgrid</span>(np.<span class="fn">linspace</span>(x_min,x_max,<span class="nm">100</span>), np.<span class="fn">linspace</span>(y_min,y_max,<span class="nm">100</span>))
+    Z = model.<span class="fn">predict</span>(np.<span class="fn">c_</span>[xx.<span class="fn">ravel</span>(), yy.<span class="fn">ravel</span>()]).<span class="fn">reshape</span>(xx.shape)
+    plt.<span class="fn">figure</span>()
+    plt.<span class="fn">contourf</span>(xx, yy, Z, alpha=<span class="nm">0.3</span>)
+    plt.<span class="fn">scatter</span>(X[:,<span class="nm">0</span>], X[:,<span class="nm">1</span>], c=y)
+    plt.<span class="fn">title</span>(title); plt.<span class="fn">xlabel</span>(feature_names[<span class="nm">0</span>]); plt.<span class="fn">ylabel</span>(feature_names[<span class="nm">1</span>]); plt.<span class="fn">show</span>()
+
+<span class="fn">plot_decision_boundary</span>(per, <span class="st">"Perceptron Decision Boundary"</span>)
+<span class="fn">plot_decision_boundary</span>(mlp, <span class="st">"Neural Network Decision Boundary"</span>)
+
+<span class="cm"># Accuracy Bar Chart</span>
+plt.<span class="fn">figure</span>()
+bars = plt.<span class="fn">bar</span>([<span class="st">"Perceptron"</span>, <span class="st">"Neural Network"</span>], [acc_per, acc_mlp])
+<span class="kw">for</span> bar <span class="kw">in</span> bars:
+    y_val = bar.<span class="fn">get_height</span>()
+    plt.<span class="fn">text</span>(bar.<span class="fn">get_x</span>()+bar.<span class="fn">get_width</span>()/<span class="nm">2</span>, y_val, <span class="op">round</span>(y_val,<span class="nm">2</span>), ha=<span class="st">'center'</span>, va=<span class="st">'bottom'</span>)
+plt.<span class="fn">title</span>(<span class="st">"Model Accuracy Comparison"</span>); plt.<span class="fn">ylabel</span>(<span class="st">"Accuracy"</span>); plt.<span class="fn">show</span>()`
+  },
+  {
+    id: 8,
+    num: "Practical 8",
+    category: "cluster",
+    tag: "cluster",
+    tagLabel: "Clustering",
+    title: "k-Means, Fuzzy C-Means, GMM + Logistic Regression & kNN",
+    desc: "Covers supervised (Logistic Regression, kNN) and unsupervised (k-Means, Fuzzy C-Means, GMM) methods on the Iris dataset.",
+    code: `<span class="cm"># Install: pip install scikit-fuzzy</span>
+<span class="cm"># !pip install scikit-fuzzy</span>
+
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">from</span> sklearn.datasets <span class="kw">import</span> load_iris
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+<span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> LogisticRegression
+<span class="kw">from</span> sklearn.neighbors <span class="kw">import</span> KNeighborsClassifier
+<span class="kw">from</span> sklearn.cluster <span class="kw">import</span> KMeans
+<span class="kw">from</span> sklearn.mixture <span class="kw">import</span> GaussianMixture
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> accuracy_score
+<span class="kw">import</span> skfuzzy <span class="kw">as</span> fuzz
+
+iris = <span class="fn">load_iris</span>()
+X = iris.data[:, :<span class="nm">2</span>]
+y = iris.target
+
+plt.<span class="fn">figure</span>()
+plt.<span class="fn">scatter</span>(X[:,<span class="nm">0</span>], X[:,<span class="nm">1</span>], c=y)
+plt.<span class="fn">title</span>(<span class="st">"Iris Dataset"</span>)
+plt.<span class="fn">xlabel</span>(<span class="st">"Feature 1"</span>); plt.<span class="fn">ylabel</span>(<span class="st">"Feature 2"</span>); plt.<span class="fn">show</span>()
+
+X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(X, y, test_size=<span class="nm">0.3</span>, random_state=<span class="nm">0</span>)
+
+<span class="cm"># Logistic Regression</span>
+log = <span class="cl">LogisticRegression</span>()
+log.<span class="fn">fit</span>(X_train, y_train)
+<span class="op">print</span>(<span class="st">"Logistic Regression Accuracy:"</span>, <span class="fn">accuracy_score</span>(y_test, log.<span class="fn">predict</span>(X_test)))
+
+<span class="cm"># kNN</span>
+knn = <span class="cl">KNeighborsClassifier</span>(n_neighbors=<span class="nm">5</span>)
+knn.<span class="fn">fit</span>(X_train, y_train)
+<span class="op">print</span>(<span class="st">"kNN Accuracy:"</span>, <span class="fn">accuracy_score</span>(y_test, knn.<span class="fn">predict</span>(X_test)))
+
+<span class="cm"># k-Means</span>
+kmeans = <span class="cl">KMeans</span>(n_clusters=<span class="nm">3</span>, random_state=<span class="nm">0</span>)
+clusters = kmeans.<span class="fn">fit_predict</span>(X)
+plt.<span class="fn">figure</span>()
+plt.<span class="fn">scatter</span>(X[:,<span class="nm">0</span>], X[:,<span class="nm">1</span>], c=clusters)
+plt.<span class="fn">scatter</span>(kmeans.cluster_centers_[:,<span class="nm">0</span>], kmeans.cluster_centers_[:,<span class="nm">1</span>], marker=<span class="st">'X'</span>, s=<span class="nm">200</span>)
+plt.<span class="fn">title</span>(<span class="st">"k-Means Clustering"</span>); plt.<span class="fn">show</span>()
+
+<span class="cm"># Fuzzy C-Means</span>
+cntr, u, _, _, _, _, _ = fuzz.cluster.<span class="fn">cmeans</span>(X.T, <span class="nm">3</span>, <span class="nm">2</span>, error=<span class="nm">0.005</span>, maxiter=<span class="nm">1000</span>)
+labels = np.<span class="fn">argmax</span>(u, axis=<span class="nm">0</span>)
+plt.<span class="fn">figure</span>()
+plt.<span class="fn">scatter</span>(X[:,<span class="nm">0</span>], X[:,<span class="nm">1</span>], c=labels)
+plt.<span class="fn">title</span>(<span class="st">"Fuzzy C-Means Clustering"</span>); plt.<span class="fn">show</span>()
+
+<span class="cm"># Gaussian Mixture Model</span>
+gmm = <span class="cl">GaussianMixture</span>(n_components=<span class="nm">3</span>, random_state=<span class="nm">0</span>)
+gmm_labels = gmm.<span class="fn">fit_predict</span>(X)
+plt.<span class="fn">figure</span>()
+plt.<span class="fn">scatter</span>(X[:,<span class="nm">0</span>], X[:,<span class="nm">1</span>], c=gmm_labels)
+plt.<span class="fn">title</span>(<span class="st">"Gaussian Mixture Model Clustering"</span>); plt.<span class="fn">show</span>()`
+  }
+];
+
+let currentFilter = 'all';
+let currentSearch = '';
+
+function rawCode(htmlCode) {
+  const d = document.createElement('div');
+  d.innerHTML = htmlCode;
+  return d.textContent;
+}
+
+function renderCards() {
+  const list  = document.getElementById('cardsList');
+  const badge = document.getElementById('countBadge');
+  const q = currentSearch.toLowerCase();
+
+  const order = ['Practical 1','Practical 2','Practical 3','Practical 4','Practical 5','Practical 6A','Practical 6B','Practical 7','Practical 8'];
+  practicals.sort((a,b) => order.indexOf(a.num) - order.indexOf(b.num));
+
+  const filtered = practicals.filter(p => {
+    const matchCat = currentFilter === 'all' || p.category === currentFilter;
+    const matchQ   = !q || p.title.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.num.toLowerCase().includes(q);
+    return matchCat && matchQ;
+  });
+
+  badge.innerHTML = `Showing <span>${filtered.length}</span> of ${practicals.length} practicals`;
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="empty">No practicals found for "<strong>${currentSearch}</strong>"</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map((p, i) => `
+    <div class="card" style="animation-delay:${i*0.05}s" id="card-${p.id}">
+      <div class="card-header" onclick="toggleCard(${p.id})">
+        <div class="card-meta">
+          <span class="prac-num">${p.num}</span>
+          <span class="tag tag-${p.tag}">${p.tagLabel}</span>
+          <span class="card-title">${p.title}</span>
+        </div>
+        <div class="card-actions">
+          <button class="copy-btn" id="copybtn-${p.id}" onclick="event.stopPropagation(); copyCode(${p.id})">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy
+          </button>
+          <svg class="chevron" id="chev-${p.id}" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="card-body" id="body-${p.id}">
+        <div class="card-desc"># ${p.desc}</div>
+        <div class="code-wrap"><pre>${p.code}</pre></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleCard(id) {
+  const body = document.getElementById(`body-${id}`);
+  const chev = document.getElementById(`chev-${id}`);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  chev.classList.toggle('open', !isOpen);
+}
+
+function copyCode(id) {
+  const p = practicals.find(x => x.id === id);
+  if (!p) return;
+  navigator.clipboard.writeText(rawCode(p.code)).then(() => {
+    const btn = document.getElementById(`copybtn-${id}`);
+    btn.classList.add('copied');
+    btn.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+    showToast();
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.innerHTML = `<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy`;
+    }, 2500);
+  });
+}
+
+function showToast() {
+  const t = document.getElementById('toast');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+function setFilter(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards();
+}
+
+function filterCards() {
+  currentSearch = document.getElementById('searchInput').value;
+  renderCards();
+}
+
+renderCards();
+</script>
+</body>
+</html>
